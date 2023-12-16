@@ -142,9 +142,9 @@ def application(environ, start_response):
 		error = "Hostname is not a string"
 	elif not isinstance(data["password"], str):
 		error = "Password is not a string"
-	elif "ip4" not in data or not isinstance(data["ip4"], str):
+	elif "ip4" in data and not isinstance(data["ip4"], str):
 		error = "IPv4 address is not a string"
-	elif "ip6" not in data or not isinstance(data["ip6"], str):
+	elif "ip6" in data and not isinstance(data["ip6"], str):
 		error = "IPv6 address is not a string"
 
 	if not error and "ip4" in data:
