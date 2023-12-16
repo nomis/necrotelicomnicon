@@ -140,6 +140,21 @@ def application(environ, start_response):
 		error = "IPv4 address is not a string"
 	elif "ip6" not in data or not isinstance(data["ip6"], str):
 		error = "IPv6 address is not a string"
+
+	if not error and "ip4" in data:
+		try:
+			data["ip4"] = str(ipaddress.IPv4Address(data["ip4"]))
+		except Exception as e:
+			error = f"Invalid IPv4 address: {e}"
+
+	if not error and "ip6" in data:
+		try:
+			data["ip6"] = str(ipaddress.IPv6Address(data["ip6"]))
+		except Exception as e:
+			error = f"Invalid IPv6 address: {e}"
+
+	if error:
+		pass
 	else:
 		db = getconn(pool, max_pool)
 		if db:
@@ -154,18 +169,6 @@ def application(environ, start_response):
 				pool.putconn(db)
 		else:
 			error = "Database unavailable"
-
-	try:
-		if not error and "ip4" in data:
-			data["ip4"] = str(ipaddress.IPv4Address(data["ip4"]))
-	except Exception as e:
-		error = f"Invalid IPv4 address: {e}"
-	
-	try:
-		if not error and "ip6" in data:
-			data["ip6"] = str(ipaddress.IPv6Address(data["ip6"]))
-	except Exception as e:
-		error = f"Invalid IPv6 address: {e}"
 
 	if error:
 		pass
