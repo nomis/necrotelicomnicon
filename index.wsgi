@@ -50,7 +50,7 @@ def rewrite(filename, hostname, ip4, ip6):
 	with open(filename, "r") as f:
 		data = f.read()
 
-	lines = data.split("\n")
+	lines = data.rstrip("\n").split("\n")
 	new_lines = []
 	hostname = hostname.lower()
 	prefix4 = f"{hostname} A "
