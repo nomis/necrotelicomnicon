@@ -162,6 +162,8 @@ def application(environ, start_response):
 	if error:
 		pass
 	else:
+		data["hostname"] = data["hostname"].lower()
+
 		db = getconn(pool, max_pool)
 		if db:
 			try:
