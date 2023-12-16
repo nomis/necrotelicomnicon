@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cbor2
+import fcntl
 import ipaddress
 import os
 import psycopg2.extras
@@ -90,22 +91,27 @@ def rewrite(filename, hostname, ip4, ip6):
 def update(origin, hostname, ip4, ip6):
 	cwd = config["git"]
 
-	if subprocess.run(["git", "reset", "--hard", "HEAD"], cwd=cwd).returncode != 0:
-		return "Git reset failed"
+	with open("lock", "w") as lock:
+		fcntl.flock(lock, fcntl.LOCK_EX)
+		try:
+			if subprocess.run(["git", "reset", "--hard", "HEAD"], cwd=cwd).returncode != 0:
+				return "Git reset failed"
 
-	if subprocess.run(["git", "pull", "--rebase"], cwd=cwd).returncode != 0:
-		return "Git pull failed"
+			if subprocess.run(["git", "pull", "--rebase"], cwd=cwd).returncode != 0:
+				return "Git pull failed"
 
-	rewrite(f"{config['git']}/{config['zone']}", hostname, ip4, ip6)
+			rewrite(f"{config['git']}/{config['zone']}", hostname, ip4, ip6)
 
-	if subprocess.run(["git", "diff-files", "--quiet", "--", config["zone"]], cwd=cwd).returncode != 0:
-		if subprocess.run(["git", "commit", "-a", "-m", origin], cwd=cwd).returncode != 0:
-			return "Git commit failed"
+			if subprocess.run(["git", "diff-files", "--quiet", "--", config["zone"]], cwd=cwd).returncode != 0:
+				if subprocess.run(["git", "commit", "-a", "-m", origin], cwd=cwd).returncode != 0:
+					return "Git commit failed"
 
-	if subprocess.run(["git", "push"], cwd=cwd).returncode != 0:
-		return "Git push failed"
+			if subprocess.run(["git", "push"], cwd=cwd).returncode != 0:
+				return "Git push failed"
 
-	return ""
+			return ""
+		finally:
+			fcntl.flock(lock, fcntl.LOCK_UN)
 
 def application(environ, start_response):
 	req = webob.Request(environ)
